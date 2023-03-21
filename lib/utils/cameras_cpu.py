@@ -4,19 +4,20 @@
 # ------------------------------------------------------------------------------
 
 from __future__ import division
+
 import numpy as np
 
 
 def unfold_camera_param(camera):
-    R = camera['R']
-    T = camera['T']
-    fx = camera['fx']
-    fy = camera['fy']
+    R = camera["R"]
+    T = camera["T"]
+    fx = camera["fx"]
+    fy = camera["fy"]
     # f = 0.5 * (camera['fx'] + camera['fy'])
     f = np.array([[fx], [fy]]).reshape(-1, 1)
-    c = np.array([[camera['cx']], [camera['cy']]]).reshape(-1, 1)
-    k = camera['k']
-    p = camera['p']
+    c = np.array([[camera["cx"]], [camera["cy"]]]).reshape(-1, 1)
+    k = camera["k"]
+    p = camera["p"]
     return R, T, f, c, k, p
 
 
@@ -35,15 +36,17 @@ def project_point_radial(x, R, T, f, c, k, p):
     """
     n = x.shape[0]
     xcam = R.dot(x.T - T)
-    y = xcam[:2] / (xcam[2]+1e-5)
+    y = xcam[:2] / (xcam[2] + 1e-5)
     # print(xcam[2])
 
     r2 = np.sum(y**2, axis=0)
-    radial = 1 + np.einsum('ij,ij->j', np.tile(k, (1, n)),
-                           np.array([r2, r2**2, r2**3]))
+    radial = 1 + np.einsum(
+        "ij,ij->j", np.tile(k, (1, n)), np.array([r2, r2**2, r2**3])
+    )
     tan = p[0] * y[1] + p[1] * y[0]
-    y = y * np.tile(radial + 2 * tan,
-                    (2, 1)) + np.outer(np.array([p[1], p[0]]).reshape(-1), r2)
+    y = y * np.tile(radial + 2 * tan, (2, 1)) + np.outer(
+        np.array([p[1], p[0]]).reshape(-1), r2
+    )
     ypixel = np.multiply(f, y) + c
     return ypixel.T
 

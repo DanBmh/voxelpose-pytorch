@@ -6,9 +6,8 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
-from models.v2v_net import V2VNet
 from models.project_layer import ProjectLayer
+from models.v2v_net import V2VNet
 
 
 class SoftArgmaxLayer(nn.Module):
@@ -43,8 +42,9 @@ class PoseRegressionNet(nn.Module):
         num_joints = all_heatmaps[0].shape[1]
         device = all_heatmaps[0].device
         pred = torch.zeros(batch_size, num_joints, 3, device=device)
-        cubes, grids = self.project_layer(all_heatmaps, meta,
-                                          self.grid_size, grid_centers, self.cube_size)
+        cubes, grids = self.project_layer(
+            all_heatmaps, meta, self.grid_size, grid_centers, self.cube_size
+        )
 
         index = grid_centers[:, 3] >= 0
         valid_cubes = self.v2v_net(cubes[index])

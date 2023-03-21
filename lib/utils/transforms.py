@@ -3,22 +3,20 @@
 # Licensed under the MIT License.
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import numpy as np
 import cv2
-
+import numpy as np
 import torch
 
 
 def flip_back(output_flipped, matched_parts):
-    '''
+    """
     ouput_flipped: numpy.ndarray(batch_size, num_joints, height, width)
-    '''
-    assert output_flipped.ndim == 4,\
-        'output_flipped should be [batch_size, num_joints, height, width]'
+    """
+    assert (
+        output_flipped.ndim == 4
+    ), "output_flipped should be [batch_size, num_joints, height, width]"
 
     output_flipped = output_flipped[:, :, :, ::-1]
 
@@ -39,10 +37,14 @@ def fliplr_joints(joints, joints_vis, width, matched_parts):
 
     # Change left-right parts
     for pair in matched_parts:
-        joints[pair[0], :], joints[pair[1], :] = \
-            joints[pair[1], :], joints[pair[0], :].copy()
-        joints_vis[pair[0], :], joints_vis[pair[1], :] = \
-            joints_vis[pair[1], :], joints_vis[pair[0], :].copy()
+        joints[pair[0], :], joints[pair[1], :] = (
+            joints[pair[1], :],
+            joints[pair[0], :].copy(),
+        )
+        joints_vis[pair[0], :], joints_vis[pair[1], :] = (
+            joints_vis[pair[1], :],
+            joints_vis[pair[0], :].copy(),
+        )
 
     return joints * joints_vis, joints_vis
 
@@ -55,12 +57,9 @@ def transform_preds(coords, center, scale, output_size):
     return target_coords
 
 
-def get_affine_transform(center,
-                         scale,
-                         rot,
-                         output_size,
-                         shift=np.array([0, 0], dtype=np.float32),
-                         inv=0):
+def get_affine_transform(
+    center, scale, rot, output_size, shift=np.array([0, 0], dtype=np.float32), inv=0
+):
     if isinstance(scale, torch.Tensor):
         scale = np.array(scale.cpu())
     if isinstance(center, torch.Tensor):
@@ -82,7 +81,7 @@ def get_affine_transform(center,
 
     src = np.zeros((3, 2), dtype=np.float32)
     dst = np.zeros((3, 2), dtype=np.float32)
-    src[0, :] = center + scale_tmp * shift     # x,y
+    src[0, :] = center + scale_tmp * shift  # x,y
     src[1, :] = center + src_dir + scale_tmp * shift
     dst[0, :] = [dst_w * 0.5, dst_h * 0.5]
     dst[1, :] = np.array([dst_w * 0.5, dst_h * 0.5]) + dst_dir
@@ -99,15 +98,15 @@ def get_affine_transform(center,
 
 
 def affine_transform(pt, t):
-    new_pt = np.array([pt[0], pt[1], 1.]).T
+    new_pt = np.array([pt[0], pt[1], 1.0]).T
     new_pt = np.dot(t, new_pt)
     return new_pt[:2]
 
 
 def affine_transform_pts(pts, t):
     xyz = np.add(
-        np.array([[1, 0], [0, 1], [0, 0]]).dot(pts.T), np.array([[0], [0],
-                                                                 [1]]))
+        np.array([[1, 0], [0, 1], [0, 0]]).dot(pts.T), np.array([[0], [0], [1]])
+    )
     return np.dot(t, xyz).T
 
 
@@ -137,11 +136,11 @@ def crop(img, center, scale, output_size, rot=0):
     trans = get_affine_transform(center, scale, rot, output_size)
 
     dst_img = cv2.warpAffine(
-        img,
-        trans, (int(output_size[0]), int(output_size[1])),
-        flags=cv2.INTER_LINEAR)
+        img, trans, (int(output_size[0]), int(output_size[1])), flags=cv2.INTER_LINEAR
+    )
 
     return dst_img
+
 
 def get_scale(image_size, resized_size):
     w, h = image_size
@@ -172,12 +171,16 @@ def projectPoints(X, K, R, t, Kd):
 
     r = x[0, :] * x[0, :] + x[1, :] * x[1, :]
 
-    x[0, :] = x[0, :] * (1 + Kd[0] * r + Kd[1] * r * r + Kd[4] * r * r * r
-                        ) + 2 * Kd[2] * x[0, :] * x[1, :] + Kd[3] * (
-                            r + 2 * x[0, :] * x[0, :])
-    x[1, :] = x[1, :] * (1 + Kd[0] * r + Kd[1] * r * r + Kd[4] * r * r * r
-                        ) + 2 * Kd[3] * x[0, :] * x[1, :] + Kd[2] * (
-                            r + 2 * x[1, :] * x[1, :])
+    x[0, :] = (
+        x[0, :] * (1 + Kd[0] * r + Kd[1] * r * r + Kd[4] * r * r * r)
+        + 2 * Kd[2] * x[0, :] * x[1, :]
+        + Kd[3] * (r + 2 * x[0, :] * x[0, :])
+    )
+    x[1, :] = (
+        x[1, :] * (1 + Kd[0] * r + Kd[1] * r * r + Kd[4] * r * r * r)
+        + 2 * Kd[3] * x[0, :] * x[1, :]
+        + Kd[2] * (r + 2 * x[1, :] * x[1, :])
+    )
 
     x[0, :] = K[0, 0] * x[0, :] + K[0, 1] * x[1, :] + K[0, 2]
     x[1, :] = K[1, 0] * x[0, :] + K[1, 1] * x[1, :] + K[1, 2]
@@ -193,8 +196,9 @@ def rotate_points(points, center, rot_rad):
     :return: N*2
     """
     rot_rad = rot_rad * np.pi / 180.0
-    rotate_mat = np.array([[np.cos(rot_rad), -np.sin(rot_rad)],
-                          [np.sin(rot_rad), np.cos(rot_rad)]])
+    rotate_mat = np.array(
+        [[np.cos(rot_rad), -np.sin(rot_rad)], [np.sin(rot_rad), np.cos(rot_rad)]]
+    )
     center = center.reshape(2, 1)
     points = points.T
     points = rotate_mat.dot(points - center) + center
@@ -225,8 +229,8 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
     X0 = X - muX
     Y0 = Y - muY
 
-    ssX = (X0 ** 2.).sum()
-    ssY = (Y0 ** 2.).sum()
+    ssX = (X0**2.0).sum()
+    ssY = (Y0**2.0).sum()
 
     # centred Frobenius norm
     normX = np.sqrt(ssX)
@@ -252,7 +256,7 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
 
     if compute_optimal_scale:  # Compute optimum scaling of Y.
         b = traceTA * normX / normY
-        d = 1 - traceTA ** 2
+        d = 1 - traceTA**2
         Z = normX * traceTA * np.dot(Y0, T) + muX
     else:  # If no scaling allowed
         b = 1
@@ -265,7 +269,9 @@ def compute_similarity_transform(X, Y, compute_optimal_scale=False):
 
 
 def procrustes_transform(target_pose, from_pose):
-    _, Z, rot, s, t = compute_similarity_transform(target_pose, from_pose, compute_optimal_scale=True)
+    _, Z, rot, s, t = compute_similarity_transform(
+        target_pose, from_pose, compute_optimal_scale=True
+    )
     align_pose = s * from_pose.dot(rot) + t
 
     return align_pose

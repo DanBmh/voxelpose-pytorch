@@ -11,11 +11,17 @@ class Basic3DBlock(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size):
         super(Basic3DBlock, self).__init__()
         self.block = nn.Sequential(
-            nn.Conv3d(in_planes, out_planes, kernel_size=kernel_size, stride=1, padding=((kernel_size-1)//2)),
+            nn.Conv3d(
+                in_planes,
+                out_planes,
+                kernel_size=kernel_size,
+                stride=1,
+                padding=((kernel_size - 1) // 2),
+            ),
             nn.BatchNorm3d(out_planes),
-            nn.ReLU(True)
+            nn.ReLU(True),
         )
-    
+
     def forward(self, x):
         return self.block(x)
 
@@ -28,7 +34,7 @@ class Res3DBlock(nn.Module):
             nn.BatchNorm3d(out_planes),
             nn.ReLU(True),
             nn.Conv3d(out_planes, out_planes, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm3d(out_planes)
+            nn.BatchNorm3d(out_planes),
         )
 
         if in_planes == out_planes:
@@ -36,38 +42,45 @@ class Res3DBlock(nn.Module):
         else:
             self.skip_con = nn.Sequential(
                 nn.Conv3d(in_planes, out_planes, kernel_size=1, stride=1, padding=0),
-                nn.BatchNorm3d(out_planes)
+                nn.BatchNorm3d(out_planes),
             )
-    
+
     def forward(self, x):
         res = self.res_branch(x)
         skip = self.skip_con(x)
         return F.relu(res + skip, True)
 
-    
+
 class Pool3DBlock(nn.Module):
     def __init__(self, pool_size):
         super(Pool3DBlock, self).__init__()
         self.pool_size = pool_size
-    
+
     def forward(self, x):
         return F.max_pool3d(x, kernel_size=self.pool_size, stride=self.pool_size)
-    
+
 
 class Upsample3DBlock(nn.Module):
     def __init__(self, in_planes, out_planes, kernel_size, stride):
         super(Upsample3DBlock, self).__init__()
-        assert(kernel_size == 2)
-        assert(stride == 2)
+        assert kernel_size == 2
+        assert stride == 2
         self.block = nn.Sequential(
-            nn.ConvTranspose3d(in_planes, out_planes, kernel_size=kernel_size, stride=stride, padding=0, output_padding=0),
+            nn.ConvTranspose3d(
+                in_planes,
+                out_planes,
+                kernel_size=kernel_size,
+                stride=stride,
+                padding=0,
+                output_padding=0,
+            ),
             nn.BatchNorm3d(out_planes),
-            nn.ReLU(True)
+            nn.ReLU(True),
         )
 
     def forward(self, x):
         return self.block(x)
-    
+
 
 class EncoderDecorder(nn.Module):
     def __init__(self):
@@ -121,7 +134,9 @@ class V2VNet(nn.Module):
 
         self.encoder_decoder = EncoderDecorder()
 
-        self.output_layer = nn.Conv3d(32, output_channels, kernel_size=1, stride=1, padding=0)
+        self.output_layer = nn.Conv3d(
+            32, output_channels, kernel_size=1, stride=1, padding=0
+        )
 
         self._initialize_weights()
 

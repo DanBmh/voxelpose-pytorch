@@ -4,22 +4,22 @@
 # ------------------------------------------------------------------------------
 
 from __future__ import division
-import torch
+
 import numpy as np
+import torch
 
 
 def unfold_camera_param(camera, device=None):
-    R = torch.as_tensor(camera['R'], dtype=torch.float, device=device)
-    T = torch.as_tensor(camera['T'], dtype=torch.float, device=device)
-    fx = torch.as_tensor(camera['fx'], dtype=torch.float, device=device)
-    fy = torch.as_tensor(camera['fy'], dtype=torch.float, device=device)
+    R = torch.as_tensor(camera["R"], dtype=torch.float, device=device)
+    T = torch.as_tensor(camera["T"], dtype=torch.float, device=device)
+    fx = torch.as_tensor(camera["fx"], dtype=torch.float, device=device)
+    fy = torch.as_tensor(camera["fy"], dtype=torch.float, device=device)
     f = torch.tensor([fx, fy], dtype=torch.float, device=device).reshape(2, 1)
     c = torch.as_tensor(
-        [[camera['cx']], [camera['cy']]],
-        dtype=torch.float,
-        device=device)
-    k = torch.as_tensor(camera['k'], dtype=torch.float, device=device)
-    p = torch.as_tensor(camera['p'], dtype=torch.float, device=device)
+        [[camera["cx"]], [camera["cy"]]], dtype=torch.float, device=device
+    )
+    k = torch.as_tensor(camera["k"], dtype=torch.float, device=device)
+    p = torch.as_tensor(camera["p"], dtype=torch.float, device=device)
     return R, T, f, c, k, p
 
 
@@ -43,7 +43,7 @@ def project_point_radial(x, R, T, f, c, k, p):
     kexp = k.repeat((1, n))
     r2 = torch.sum(y**2, 0, keepdim=True)
     r2exp = torch.cat([r2, r2**2, r2**3], 0)
-    radial = 1 + torch.einsum('ij,ij->j', kexp, r2exp)
+    radial = 1 + torch.einsum("ij,ij->j", kexp, r2exp)
 
     tan = p[0] * y[1] + p[1] * y[0]
     corr = (radial + 2 * tan).repeat((2, 1))

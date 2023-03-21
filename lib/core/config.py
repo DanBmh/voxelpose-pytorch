@@ -3,56 +3,54 @@
 # Licensed under the MIT License.
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import os
-import yaml
 
 import numpy as np
+import yaml
 from easydict import EasyDict as edict
 
 config = edict()
 
-config.OUTPUT_DIR = 'output'
-config.LOG_DIR = 'log'
-config.DATA_DIR = ''
-config.BACKBONE_MODEL = 'pose_resnet'
-config.MODEL = 'multi_person_posenet'
-config.GPUS = '0,1'
+config.OUTPUT_DIR = "output"
+config.LOG_DIR = "log"
+config.DATA_DIR = ""
+config.BACKBONE_MODEL = "pose_resnet"
+config.MODEL = "multi_person_posenet"
+config.GPUS = "0,1"
 config.WORKERS = 8
 config.PRINT_FREQ = 100
 
 # higherhrnet definition
 config.MODEL_EXTRA = edict()
-config.MODEL_EXTRA.PRETRAINED_LAYERS = ['*']
+config.MODEL_EXTRA.PRETRAINED_LAYERS = ["*"]
 config.MODEL_EXTRA.FINAL_CONV_KERNEL = 1
 config.MODEL_EXTRA.STEM_INPLANES = 64
 
 config.MODEL_EXTRA.STAGE2 = edict()
 config.MODEL_EXTRA.STAGE2.NUM_MODULES = 1
-config.MODEL_EXTRA.STAGE2.NUM_BRANCHES= 2
-config.MODEL_EXTRA.STAGE2.BLOCK = 'BASIC'
+config.MODEL_EXTRA.STAGE2.NUM_BRANCHES = 2
+config.MODEL_EXTRA.STAGE2.BLOCK = "BASIC"
 config.MODEL_EXTRA.STAGE2.NUM_BLOCKS = [4, 4]
 config.MODEL_EXTRA.STAGE2.NUM_CHANNELS = [48, 96]
-config.MODEL_EXTRA.STAGE2.FUSE_METHOD = 'SUM'
+config.MODEL_EXTRA.STAGE2.FUSE_METHOD = "SUM"
 
 config.MODEL_EXTRA.STAGE3 = edict()
 config.MODEL_EXTRA.STAGE3.NUM_MODULES = 4
 config.MODEL_EXTRA.STAGE3.NUM_BRANCHES = 3
-config.MODEL_EXTRA.STAGE3.BLOCK = 'BASIC'
+config.MODEL_EXTRA.STAGE3.BLOCK = "BASIC"
 config.MODEL_EXTRA.STAGE3.NUM_BLOCKS = [4, 4, 4]
 config.MODEL_EXTRA.STAGE3.NUM_CHANNELS = [48, 96, 192]
-config.MODEL_EXTRA.STAGE3.FUSE_METHOD = 'SUM'
+config.MODEL_EXTRA.STAGE3.FUSE_METHOD = "SUM"
 
 config.MODEL_EXTRA.STAGE4 = edict()
 config.MODEL_EXTRA.STAGE4.NUM_MODULES = 3
 config.MODEL_EXTRA.STAGE4.NUM_BRANCHES = 4
-config.MODEL_EXTRA.STAGE4.BLOCK = 'BASIC'
+config.MODEL_EXTRA.STAGE4.BLOCK = "BASIC"
 config.MODEL_EXTRA.STAGE4.NUM_BLOCKS = [4, 4, 4, 4]
 config.MODEL_EXTRA.STAGE4.NUM_CHANNELS = [48, 96, 192, 384]
-config.MODEL_EXTRA.STAGE4.FUSE_METHOD = 'SUM'
+config.MODEL_EXTRA.STAGE4.FUSE_METHOD = "SUM"
 
 config.MODEL_EXTRA.DECONV = edict()
 config.MODEL_EXTRA.DECONV.NUM_DECONVS = 1
@@ -69,14 +67,14 @@ config.CUDNN.ENABLED = True
 
 # common params for NETWORK
 config.NETWORK = edict()
-config.NETWORK.PRETRAINED = 'models/pytorch/imagenet/resnet50-19c8e357.pth'
-config.NETWORK.PRETRAINED_BACKBONE = ''
+config.NETWORK.PRETRAINED = "models/pytorch/imagenet/resnet50-19c8e357.pth"
+config.NETWORK.PRETRAINED_BACKBONE = ""
 config.NETWORK.NUM_JOINTS = 20
 config.NETWORK.INPUT_SIZE = 512
 config.NETWORK.HEATMAP_SIZE = np.array([80, 80])
 config.NETWORK.IMAGE_SIZE = np.array([320, 320])
 config.NETWORK.SIGMA = 2
-config.NETWORK.TARGET_TYPE = 'gaussian'
+config.NETWORK.TARGET_TYPE = "gaussian"
 config.NETWORK.AGGRE = True
 config.NETWORK.USE_GT = False
 config.NETWORK.BETA = 100.0
@@ -96,13 +94,13 @@ config.LOSS.USE_DIFFERENT_JOINTS_WEIGHT = False
 
 # DATASET related params
 config.DATASET = edict()
-config.DATASET.ROOT = '../data/h36m/'
-config.DATASET.TRAIN_DATASET = 'mixed_dataset'
-config.DATASET.TEST_DATASET = 'multi_view_h36m'
-config.DATASET.TRAIN_SUBSET = 'train'
-config.DATASET.TEST_SUBSET = 'validation'
+config.DATASET.ROOT = "../data/h36m/"
+config.DATASET.TRAIN_DATASET = "mixed_dataset"
+config.DATASET.TEST_DATASET = "multi_view_h36m"
+config.DATASET.TRAIN_SUBSET = "train"
+config.DATASET.TEST_SUBSET = "validation"
 config.DATASET.ROOTIDX = 2
-config.DATASET.DATA_FORMAT = 'jpg'
+config.DATASET.DATA_FORMAT = "jpg"
 config.DATASET.BBOX = 2000
 config.DATASET.CROP = True
 config.DATASET.COLOR_RGB = False
@@ -120,7 +118,7 @@ config.TRAIN.LR_FACTOR = 0.1
 config.TRAIN.LR_STEP = [90, 110]
 config.TRAIN.LR = 0.001
 
-config.TRAIN.OPTIMIZER = 'adam'
+config.TRAIN.OPTIMIZER = "adam"
 config.TRAIN.MOMENTUM = 0.9
 config.TRAIN.WD = 0.0001
 config.TRAIN.NESTEROV = False
@@ -138,7 +136,7 @@ config.TRAIN.SHUFFLE = True
 # testing
 config.TEST = edict()
 config.TEST.BATCH_SIZE = 8
-config.TEST.STATE = 'best'
+config.TEST.STATE = "best"
 config.TEST.FLIP_TEST = False
 config.TEST.POST_PROCESS = False
 config.TEST.SHIFT_HEATMAP = False
@@ -147,13 +145,13 @@ config.TEST.IMAGE_THRE = 0.1
 config.TEST.NMS_THRE = 0.6
 config.TEST.OKS_THRE = 0.5
 config.TEST.IN_VIS_THRE = 0.0
-config.TEST.BBOX_FILE = ''
+config.TEST.BBOX_FILE = ""
 config.TEST.BBOX_THRE = 1.0
 config.TEST.MATCH_IOU_THRE = 0.3
-config.TEST.DETECTOR = 'fpn_dcn'
-config.TEST.DETECTOR_DIR = ''
-config.TEST.MODEL_FILE = ''
-config.TEST.HEATMAP_LOCATION_FILE = 'predicted_heatmaps.h5'
+config.TEST.DETECTOR = "fpn_dcn"
+config.TEST.DETECTOR_DIR = ""
+config.TEST.MODEL_FILE = ""
+config.TEST.HEATMAP_LOCATION_FILE = "predicted_heatmaps.h5"
 
 # debug
 config.DEBUG = edict()
@@ -166,7 +164,7 @@ config.DEBUG.SAVE_HEATMAPS_PRED = True
 # pictorial structure
 config.PICT_STRUCT = edict()
 config.PICT_STRUCT.FIRST_NBINS = 16
-config.PICT_STRUCT.PAIRWISE_FILE = ''
+config.PICT_STRUCT.PAIRWISE_FILE = ""
 config.PICT_STRUCT.RECUR_NBINS = 2
 config.PICT_STRUCT.RECUR_DEPTH = 10
 config.PICT_STRUCT.LIMB_LENGTH_TOLERANCE = 150
@@ -187,25 +185,26 @@ config.MULTI_PERSON.THRESHOLD = 0.1
 
 
 def _update_dict(k, v):
-    if k == 'DATASET':
-        if 'MEAN' in v and v['MEAN']:
-            v['MEAN'] = np.array(
-                [eval(x) if isinstance(x, str) else x for x in v['MEAN']])
-        if 'STD' in v and v['STD']:
-            v['STD'] = np.array(
-                [eval(x) if isinstance(x, str) else x for x in v['STD']])
-    if k == 'NETWORK':
-        if 'HEATMAP_SIZE' in v:
-            if isinstance(v['HEATMAP_SIZE'], int):
-                v['HEATMAP_SIZE'] = np.array(
-                    [v['HEATMAP_SIZE'], v['HEATMAP_SIZE']])
+    if k == "DATASET":
+        if "MEAN" in v and v["MEAN"]:
+            v["MEAN"] = np.array(
+                [eval(x) if isinstance(x, str) else x for x in v["MEAN"]]
+            )
+        if "STD" in v and v["STD"]:
+            v["STD"] = np.array(
+                [eval(x) if isinstance(x, str) else x for x in v["STD"]]
+            )
+    if k == "NETWORK":
+        if "HEATMAP_SIZE" in v:
+            if isinstance(v["HEATMAP_SIZE"], int):
+                v["HEATMAP_SIZE"] = np.array([v["HEATMAP_SIZE"], v["HEATMAP_SIZE"]])
             else:
-                v['HEATMAP_SIZE'] = np.array(v['HEATMAP_SIZE'])
-        if 'IMAGE_SIZE' in v:
-            if isinstance(v['IMAGE_SIZE'], int):
-                v['IMAGE_SIZE'] = np.array([v['IMAGE_SIZE'], v['IMAGE_SIZE']])
+                v["HEATMAP_SIZE"] = np.array(v["HEATMAP_SIZE"])
+        if "IMAGE_SIZE" in v:
+            if isinstance(v["IMAGE_SIZE"], int):
+                v["IMAGE_SIZE"] = np.array([v["IMAGE_SIZE"], v["IMAGE_SIZE"]])
             else:
-                v['IMAGE_SIZE'] = np.array(v['IMAGE_SIZE'])
+                v["IMAGE_SIZE"] = np.array(v["IMAGE_SIZE"])
     for vk, vv in v.items():
         if vk in config[k]:
             config[k][vk] = vv
@@ -222,8 +221,8 @@ def update_config(config_file):
                 if isinstance(v, dict):
                     _update_dict(k, v)
                 else:
-                    if k == 'SCALES':
-                        config[k][0] = (tuple(v))
+                    if k == "SCALES":
+                        config[k][0] = tuple(v)
                     else:
                         config[k] = v
             else:
@@ -236,7 +235,7 @@ def gen_config(config_file):
         if isinstance(v, edict):
             cfg[k] = dict(v)
 
-    with open(config_file, 'w') as f:
+    with open(config_file, "w") as f:
         yaml.dump(dict(cfg), f, default_flow_style=False)
 
 
@@ -254,25 +253,27 @@ def update_dir(model_dir, log_dir, data_dir):
 
     config.TEST.BBOX_FILE = os.path.join(config.DATA_DIR, config.TEST.BBOX_FILE)
 
-    config.NETWORK.PRETRAINED = os.path.join(config.DATA_DIR,
-                                             config.NETWORK.PRETRAINED)
+    config.NETWORK.PRETRAINED = os.path.join(config.DATA_DIR, config.NETWORK.PRETRAINED)
 
 
 def get_model_name(cfg):
-    name = '{model}_{num_layers}'.format(
-        model=cfg.MODEL, num_layers=cfg.POSE_RESNET.NUM_LAYERS)
-    deconv_suffix = ''.join(
-        'd{}'.format(num_filters)
-        for num_filters in cfg.POSE_RESNET.NUM_DECONV_FILTERS)
-    full_name = '{height}x{width}_{name}_{deconv_suffix}'.format(
+    name = "{model}_{num_layers}".format(
+        model=cfg.MODEL, num_layers=cfg.POSE_RESNET.NUM_LAYERS
+    )
+    deconv_suffix = "".join(
+        "d{}".format(num_filters) for num_filters in cfg.POSE_RESNET.NUM_DECONV_FILTERS
+    )
+    full_name = "{height}x{width}_{name}_{deconv_suffix}".format(
         height=cfg.NETWORK.IMAGE_SIZE[1],
         width=cfg.NETWORK.IMAGE_SIZE[0],
         name=name,
-        deconv_suffix=deconv_suffix)
+        deconv_suffix=deconv_suffix,
+    )
 
     return name, full_name
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import sys
+
     gen_config(sys.argv[1])

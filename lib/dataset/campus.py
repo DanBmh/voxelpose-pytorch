@@ -3,38 +3,36 @@
 # Licensed under the MIT License.
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
-import os.path as osp
-import numpy as np
-import json_tricks as json
-import pickle
-import scipy.io as scio
-import logging
 import copy
+import logging
 import os
+import os.path as osp
+import pickle
 from collections import OrderedDict
 
+import json_tricks as json
+import numpy as np
+import scipy.io as scio
 from dataset.JointsDataset import JointsDataset
 from utils.cameras_cpu import project_pose
 
 CAMPUS_JOINTS_DEF = {
-    'Right-Ankle': 0,
-    'Right-Knee': 1,
-    'Right-Hip': 2,
-    'Left-Hip': 3,
-    'Left-Knee': 4,
-    'Left-Ankle': 5,
-    'Right-Wrist': 6,
-    'Right-Elbow': 7,
-    'Right-Shoulder': 8,
-    'Left-Shoulder': 9,
-    'Left-Elbow': 10,
-    'Left-Wrist': 11,
-    'Bottom-Head': 12,
-    'Top-Head': 13
+    "Right-Ankle": 0,
+    "Right-Knee": 1,
+    "Right-Hip": 2,
+    "Left-Hip": 3,
+    "Left-Knee": 4,
+    "Left-Ankle": 5,
+    "Right-Wrist": 6,
+    "Right-Elbow": 7,
+    "Right-Shoulder": 8,
+    "Left-Shoulder": 9,
+    "Left-Elbow": 10,
+    "Left-Wrist": 11,
+    "Bottom-Head": 12,
+    "Top-Head": 13,
 }
 
 LIMBS = [
@@ -51,7 +49,7 @@ LIMBS = [
     [3, 9],
     [8, 12],
     [9, 12],
-    [12, 13]
+    [12, 13],
 ]
 
 
@@ -86,9 +84,11 @@ class Campus(JointsDataset):
         db = []
         cameras = self._get_cam()
 
-        datafile = os.path.join(self.dataset_root, 'actorsGT.mat')
+        datafile = os.path.join(self.dataset_root, "actorsGT.mat")
         data = scio.loadmat(datafile)
-        actor_3d = np.array(np.array(data['actor3D'].tolist()).tolist()).squeeze()  # num_person * num_frame
+        actor_3d = np.array(
+            np.array(data["actor3D"].tolist()).tolist()
+        ).squeeze()  # num_person * num_frame
 
         num_person = len(actor_3d)
         num_frames = len(actor_3d[0])
@@ -109,32 +109,36 @@ class Campus(JointsDataset):
 
                         pose2d = project_pose(pose3d, cam)
 
-                        x_check = np.bitwise_and(pose2d[:, 0] >= 0,
-                                                 pose2d[:, 0] <= width - 1)
-                        y_check = np.bitwise_and(pose2d[:, 1] >= 0,
-                                                 pose2d[:, 1] <= height - 1)
+                        x_check = np.bitwise_and(
+                            pose2d[:, 0] >= 0, pose2d[:, 0] <= width - 1
+                        )
+                        y_check = np.bitwise_and(
+                            pose2d[:, 1] >= 0, pose2d[:, 1] <= height - 1
+                        )
                         check = np.bitwise_and(x_check, y_check)
 
                         joints_vis = np.ones((len(pose2d), 1))
                         joints_vis[np.logical_not(check)] = 0
                         all_poses.append(pose2d)
                         all_poses_vis.append(
-                            np.repeat(
-                                np.reshape(joints_vis, (-1, 1)), 2, axis=1))
+                            np.repeat(np.reshape(joints_vis, (-1, 1)), 2, axis=1)
+                        )
 
-                pred_index = '{}_{}'.format(k, i)
+                pred_index = "{}_{}".format(k, i)
                 preds = self.pred_pose2d[pred_index]
                 preds = [np.array(p["pred"]) for p in preds]
 
-                db.append({
-                    'image': osp.join(self.dataset_root, image),
-                    'joints_3d': all_poses_3d,
-                    'joints_3d_vis': all_poses_vis_3d,
-                    'joints_2d': all_poses,
-                    'joints_2d_vis': all_poses_vis,
-                    'camera': cam,
-                    'pred_pose2d': preds
-                })
+                db.append(
+                    {
+                        "image": osp.join(self.dataset_root, image),
+                        "joints_3d": all_poses_3d,
+                        "joints_3d_vis": all_poses_vis_3d,
+                        "joints_2d": all_poses,
+                        "joints_2d_vis": all_poses_vis,
+                        "camera": cam,
+                        "pred_pose2d": preds,
+                    }
+                )
         return db
 
     def _get_cam(self):
@@ -149,7 +153,14 @@ class Campus(JointsDataset):
         return cameras
 
     def __getitem__(self, idx):
-        input, target_heatmap, target_weight, target_3d, meta, input_heatmap = [], [], [], [], [], []
+        input, target_heatmap, target_weight, target_3d, meta, input_heatmap = (
+            [],
+            [],
+            [],
+            [],
+            [],
+            [],
+        )
         for k in range(self.num_views):
             i, th, tw, t3, m, ih = super().__getitem__(self.num_views * idx + k)
             input.append(i)
@@ -164,14 +175,26 @@ class Campus(JointsDataset):
         return self.db_size // self.num_views
 
     def evaluate(self, preds, recall_threshold=500):
-        datafile = os.path.join(self.dataset_root, 'actorsGT.mat')
+        datafile = os.path.join(self.dataset_root, "actorsGT.mat")
         data = scio.loadmat(datafile)
-        actor_3d = np.array(np.array(data['actor3D'].tolist()).tolist()).squeeze()  # num_person * num_frame
+        actor_3d = np.array(
+            np.array(data["actor3D"].tolist()).tolist()
+        ).squeeze()  # num_person * num_frame
         num_person = len(actor_3d)
         total_gt = 0
         match_gt = 0
 
-        limbs = [[0, 1], [1, 2], [3, 4], [4, 5], [6, 7], [7, 8], [9, 10], [10, 11], [12, 13]]
+        limbs = [
+            [0, 1],
+            [1, 2],
+            [3, 4],
+            [4, 5],
+            [6, 7],
+            [7, 8],
+            [9, 10],
+            [10, 11],
+            [12, 13],
+        ]
         correct_parts = np.zeros(num_person)
         total_parts = np.zeros(num_person)
         alpha = 0.5
@@ -180,14 +203,18 @@ class Campus(JointsDataset):
         for i, fi in enumerate(self.frame_range):
             pred_coco = preds[i].copy()
             pred_coco = pred_coco[pred_coco[:, 0, 3] >= 0, :, :3]
-            pred = np.stack([self.coco2campus3D(p) for p in copy.deepcopy(pred_coco[:, :, :3])])
+            pred = np.stack(
+                [self.coco2campus3D(p) for p in copy.deepcopy(pred_coco[:, :, :3])]
+            )
 
             for person in range(num_person):
                 gt = actor_3d[person][fi] * 1000.0
                 if len(gt[0]) == 0:
                     continue
 
-                mpjpes = np.mean(np.sqrt(np.sum((gt[np.newaxis] - pred) ** 2, axis=-1)), axis=-1)
+                mpjpes = np.mean(
+                    np.sqrt(np.sum((gt[np.newaxis] - pred) ** 2, axis=-1)), axis=-1
+                )
                 min_n = np.argmin(mpjpes)
                 min_mpjpe = np.min(mpjpes)
                 if min_mpjpe < recall_threshold:
@@ -216,11 +243,20 @@ class Campus(JointsDataset):
         avg_pcp = np.mean(actor_pcp[:3])
 
         bone_group = OrderedDict(
-            [('Head', [8]), ('Torso', [9]), ('Upper arms', [5, 6]),
-             ('Lower arms', [4, 7]), ('Upper legs', [1, 2]), ('Lower legs', [0, 3])])
+            [
+                ("Head", [8]),
+                ("Torso", [9]),
+                ("Upper arms", [5, 6]),
+                ("Lower arms", [4, 7]),
+                ("Upper legs", [1, 2]),
+                ("Lower legs", [0, 3]),
+            ]
+        )
         bone_person_pcp = OrderedDict()
         for k, v in bone_group.items():
-            bone_person_pcp[k] = np.sum(bone_correct_parts[:, v], axis=-1) / (total_parts / 10 * len(v) + 1e-8)
+            bone_person_pcp[k] = np.sum(bone_correct_parts[:, v], axis=-1) / (
+                total_parts / 10 * len(v) + 1e-8
+            )
 
         return actor_pcp, avg_pcp, bone_person_pcp, match_gt / (total_gt + 1e-8)
 
@@ -233,7 +269,7 @@ class Campus(JointsDataset):
         """
         campus_pose = np.zeros((14, 3))
         coco2campus = np.array([16, 14, 12, 11, 13, 15, 10, 8, 6, 5, 7, 9])
-        campus_pose[0: 12] += coco_pose[coco2campus]
+        campus_pose[0:12] += coco_pose[coco2campus]
 
         mid_sho = (coco_pose[5] + coco_pose[6]) / 2  # L and R shoulder
         head_center = (coco_pose[3] + coco_pose[4]) / 2  # middle of two ear

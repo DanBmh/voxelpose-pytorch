@@ -3,9 +3,7 @@
 # Licensed under the MIT License.
 # ------------------------------------------------------------------------------
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+from __future__ import absolute_import, division, print_function
 
 import numpy as np
 import torch
@@ -17,7 +15,9 @@ def get_index(indices, shape):
     batch_size = indices.shape[0]
     num_people = indices.shape[1]
     indices_x = (indices // (shape[1] * shape[2])).reshape(batch_size, num_people, -1)
-    indices_y = ((indices % (shape[1] * shape[2])) // shape[2]).reshape(batch_size, num_people, -1)
+    indices_y = ((indices % (shape[1] * shape[2])) // shape[2]).reshape(
+        batch_size, num_people, -1
+    )
     indices_z = (indices % shape[2]).reshape(batch_size, num_people, -1)
     indices = torch.cat([indices_x, indices_y, indices_z], dim=2)
     return indices
