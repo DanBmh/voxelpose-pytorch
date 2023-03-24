@@ -18,7 +18,7 @@ class Basic3DBlock(nn.Module):
                 stride=1,
                 padding=((kernel_size - 1) // 2),
             ),
-            nn.BatchNorm3d(out_planes),
+            nn.InstanceNorm3d(out_planes, affine=True),
             nn.ReLU(True),
         )
 
@@ -31,10 +31,10 @@ class Res3DBlock(nn.Module):
         super(Res3DBlock, self).__init__()
         self.res_branch = nn.Sequential(
             nn.Conv3d(in_planes, out_planes, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm3d(out_planes),
+            nn.InstanceNorm3d(out_planes, affine=True),
             nn.ReLU(True),
             nn.Conv3d(out_planes, out_planes, kernel_size=3, stride=1, padding=1),
-            nn.BatchNorm3d(out_planes),
+            nn.InstanceNorm3d(out_planes, affine=True),
         )
 
         if in_planes == out_planes:
@@ -42,7 +42,7 @@ class Res3DBlock(nn.Module):
         else:
             self.skip_con = nn.Sequential(
                 nn.Conv3d(in_planes, out_planes, kernel_size=1, stride=1, padding=0),
-                nn.BatchNorm3d(out_planes),
+                nn.InstanceNorm3d(out_planes, affine=True),
             )
 
     def forward(self, x):
@@ -74,7 +74,7 @@ class Upsample3DBlock(nn.Module):
                 padding=0,
                 output_padding=0,
             ),
-            nn.BatchNorm3d(out_planes),
+            nn.InstanceNorm3d(out_planes, affine=True),
             nn.ReLU(True),
         )
 

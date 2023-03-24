@@ -36,9 +36,6 @@ def train_3d(
     if model.module.backbone is not None:
         model.module.backbone.eval()  # Comment out this line if you want to train 2D backbone jointly
 
-    accumulation_steps = 4
-    accu_loss_3d = 0
-
     end = time.time()
     for i, (
         inputs,
@@ -76,18 +73,18 @@ def train_3d(
         loss = loss_2d + loss_3d + loss_cord
         losses.update(loss.item())
 
-        if loss_cord > 0:
+        if loss_2d > 0 and loss_cord > 0 and loss_3d > 0:
             optimizer.zero_grad()
-            (loss_2d + loss_cord).backward()
+            (loss_2d + loss_3d + loss_cord).backward()
             optimizer.step()
-
-        if accu_loss_3d > 0 and (i + 1) % accumulation_steps == 0:
+        elif loss_cord > 0 and loss_3d > 0:
             optimizer.zero_grad()
-            accu_loss_3d.backward()
+            (loss_3d + loss_cord).backward()
             optimizer.step()
-            accu_loss_3d = 0.0
-        else:
-            accu_loss_3d += loss_3d / accumulation_steps
+        elif loss_cord > 0:
+            optimizer.zero_grad()
+            (loss_cord).backward()
+            optimizer.step()
 
         batch_time.update(time.time() - end)
         end = time.time()
