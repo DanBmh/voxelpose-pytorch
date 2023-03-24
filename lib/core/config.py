@@ -77,6 +77,7 @@ config.NETWORK.SIGMA = 2
 config.NETWORK.TARGET_TYPE = "gaussian"
 config.NETWORK.AGGRE = True
 config.NETWORK.USE_GT = False
+config.NETWORK.USE_GT_HMAP = False
 config.NETWORK.BETA = 100.0
 
 # pose_resnet related params

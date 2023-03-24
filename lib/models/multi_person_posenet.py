@@ -24,6 +24,7 @@ class MultiPersonPoseNet(nn.Module):
         self.pose_net = PoseRegressionNet(cfg)
 
         self.USE_GT = cfg.NETWORK.USE_GT
+        self.USE_GT_HMAP = cfg.NETWORK.USE_GT_HMAP
         self.root_id = cfg.DATASET.ROOTIDX
         self.dataset_name = cfg.DATASET.TEST_DATASET
 
@@ -36,13 +37,17 @@ class MultiPersonPoseNet(nn.Module):
         targets_3d=None,
         input_heatmaps=None,
     ):
-        if views is not None:
-            all_heatmaps = []
-            for view in views:
-                heatmaps = self.backbone(view)
-                all_heatmaps.append(heatmaps)
+        if self.USE_GT_HMAP:
+            with torch.no_grad():
+                all_heatmaps = targets_2d
         else:
-            all_heatmaps = input_heatmaps
+            if views is not None:
+                all_heatmaps = []
+                for view in views:
+                    heatmaps = self.backbone(view)
+                    all_heatmaps.append(heatmaps)
+            else:
+                all_heatmaps = input_heatmaps
 
         # all_heatmaps = targets_2d
         device = all_heatmaps[0].device
@@ -53,7 +58,7 @@ class MultiPersonPoseNet(nn.Module):
         loss_2d = criterion(
             torch.zeros(1, device=device), torch.zeros(1, device=device)
         )
-        if targets_2d is not None:
+        if targets_2d is not None and not self.USE_GT_HMAP:
             for t, w, o in zip(targets_2d, weights_2d, all_heatmaps):
                 loss_2d += criterion(o, t, True, w)
             loss_2d /= len(all_heatmaps)
