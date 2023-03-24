@@ -18,12 +18,8 @@ import numpy as np
 import torch
 from torch.utils.data import Dataset
 from utils.cameras_cpu import project_pose
-from utils.transforms import (
-    affine_transform,
-    get_affine_transform,
-    get_scale,
-    rotate_points,
-)
+from utils.transforms import (affine_transform, get_affine_transform,
+                              get_scale, rotate_points)
 
 logger = logging.getLogger(__name__)
 

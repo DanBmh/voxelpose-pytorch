@@ -7,7 +7,8 @@ import time
 
 import numpy as np
 import torch
-from utils.vis import save_debug_3d_cubes, save_debug_3d_images, save_debug_images_multi
+from utils.vis import (save_debug_3d_cubes, save_debug_3d_images,
+                       save_debug_images_multi)
 
 logger = logging.getLogger(__name__)
 
