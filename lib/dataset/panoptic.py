@@ -146,6 +146,7 @@ class Panoptic(JointsDataset):
                         all_poses_vis_3d = []
                         all_poses = []
                         all_poses_vis = []
+                        all_poses_dists = []
                         for body in bodies:
                             pose3d = np.array(body["joints19"]).reshape((-1, 4))
                             pose3d = pose3d[: self.num_joints]
@@ -167,13 +168,16 @@ class Panoptic(JointsDataset):
                             )
 
                             pose2d = np.zeros((pose3d.shape[0], 2))
-                            pose2d[:, :2] = projectPoints(
+                            pPs = projectPoints(
                                 pose3d[:, 0:3].transpose(),
                                 v["K"],
                                 v["R"],
                                 v["t"],
                                 v["distCoef"],
-                            ).transpose()[:, :2]
+                            )
+                            pose2d[:, :2] = pPs[0].transpose()[:, :2]
+                            dists = pPs[1].transpose()
+
                             x_check = np.bitwise_and(
                                 pose2d[:, 0] >= 0, pose2d[:, 0] <= width - 1
                             )
@@ -184,6 +188,7 @@ class Panoptic(JointsDataset):
                             joints_vis[np.logical_not(check)] = 0
 
                             all_poses.append(pose2d)
+                            all_poses_dists.append(dists)
                             all_poses_vis.append(
                                 np.repeat(np.reshape(joints_vis, (-1, 1)), 2, axis=1)
                             )
@@ -208,6 +213,7 @@ class Panoptic(JointsDataset):
                                     "joints_3d": all_poses_3d,
                                     "joints_3d_vis": all_poses_vis_3d,
                                     "joints_2d": all_poses,
+                                    "joints_2d_dists": all_poses_dists,
                                     "joints_2d_vis": all_poses_vis,
                                     "camera": our_cam,
                                 }

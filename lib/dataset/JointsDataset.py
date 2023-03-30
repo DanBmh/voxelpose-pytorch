@@ -94,6 +94,7 @@ class JointsDataset(Dataset):
 
         joints = db_rec["joints_2d"]
         joints_vis = db_rec["joints_2d_vis"]
+        joints_dists = db_rec["joints_2d_dists"]
         joints_3d = db_rec["joints_3d"]
         joints_3d_vis = db_rec["joints_3d_vis"]
 
@@ -145,7 +146,9 @@ class JointsDataset(Dataset):
                 self.cfg.NETWORK.NUM_JOINTS, self.heatmap_size[1], self.heatmap_size[0]
             )
 
-        target_heatmap, target_weight = self.generate_target_heatmap(joints, joints_vis)
+        target_heatmap, target_weight = self.generate_target_heatmap(
+            joints, joints_vis, joints_dists
+        )
         target_heatmap = torch.from_numpy(target_heatmap)
         target_weight = torch.from_numpy(target_weight)
 
@@ -197,10 +200,11 @@ class JointsDataset(Dataset):
             np.maximum(maxy - miny, maxx - minx) ** 2, 1.0 / 4 * 96**2, 4 * 96**2
         )
 
-    def generate_target_heatmap(self, joints, joints_vis):
+    def generate_target_heatmap(self, joints, joints_vis, joints_dists):
         """
         :param joints:  [[num_joints, 3]]
         :param joints_vis: [num_joints, 3]
+        :param joints_dists: [num_joints]
         :return: target, target_weight(1: visible, 0: invisible)
         """
         nposes = len(joints)
@@ -221,15 +225,22 @@ class JointsDataset(Dataset):
             feat_stride = self.image_size / self.heatmap_size
 
             for n in range(nposes):
-                human_scale = 2 * self.compute_human_scale(
-                    joints[n] / feat_stride, joints_vis[n]
-                )
-                if human_scale == 0:
-                    continue
+                # human_scale = 2 * self.compute_human_scale(joints[n] / feat_stride, joints_vis[n])
+                # if human_scale == 0:
+                #     continue
+                # cur_sigma = self.sigma * np.sqrt((human_scale / (96.0 * 96.0)))
 
-                cur_sigma = self.sigma * np.sqrt((human_scale / (96.0 * 96.0)))
-                tmp_size = cur_sigma * 3
+                cur_sigma = self.sigma
+                center_dist = 3000
+                dists = joints_dists[n].astype(np.float32)
+                dists = np.reshape(dists, [-1])
+                dscale = (center_dist / dists) ** 0.5
+                dscale = np.clip(dscale, 0.25, 4.0)
+                sigmas = cur_sigma * dscale
+
                 for joint_id in range(num_joints):
+                    cur_sigma = sigmas[joint_id]
+                    tmp_size = cur_sigma * 3
                     feat_stride = self.image_size / self.heatmap_size
                     mu_x = int(joints[n][joint_id][0] / feat_stride[0])
                     mu_y = int(joints[n][joint_id][1] / feat_stride[1])

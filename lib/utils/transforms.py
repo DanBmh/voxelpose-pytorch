@@ -167,6 +167,8 @@ def projectPoints(X, K, R, t, Kd):
 
     x = np.dot(R, X) + t
 
+    z = np.sqrt(np.sum(x**2, axis=0)) * 10
+
     x[0:2, :] = x[0:2, :] / (x[2, :] + 1e-5)
 
     r = x[0, :] * x[0, :] + x[1, :] * x[1, :]
@@ -185,7 +187,7 @@ def projectPoints(X, K, R, t, Kd):
     x[0, :] = K[0, 0] * x[0, :] + K[0, 1] * x[1, :] + K[0, 2]
     x[1, :] = K[1, 0] * x[0, :] + K[1, 1] * x[1, :] + K[1, 2]
 
-    return x
+    return x, z
 
 
 def rotate_points(points, center, rot_rad):
