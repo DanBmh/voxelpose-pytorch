@@ -47,7 +47,7 @@ def train_3d(
     ) in enumerate(loader):
         data_time.update(time.time() - end)
 
-        if "panoptic" in config.DATASET.TEST_DATASET:
+        if "panoptic" in config.DATASET.TEST_DATASET or 'skelda' in config.DATASET.TEST_DATASET:
             pred, heatmaps, grid_centers, loss_2d, loss_3d, loss_cord = model(
                 views=inputs,
                 meta=meta,
@@ -154,7 +154,7 @@ def validate_3d(config, model, loader, output_dir):
             input_heatmap,
         ) in enumerate(loader):
             data_time.update(time.time() - end)
-            if "panoptic" in config.DATASET.TEST_DATASET:
+            if "panoptic" in config.DATASET.TEST_DATASET or 'skelda' in config.DATASET.TEST_DATASET:
                 pred, heatmaps, grid_centers, _, _, _ = model(
                     views=inputs,
                     meta=meta,
@@ -207,7 +207,7 @@ def validate_3d(config, model, loader, output_dir):
                 save_debug_3d_images(config, meta[0], pred, prefix2)
 
     metric = None
-    if "panoptic" in config.DATASET.TEST_DATASET:
+    if "panoptic" in config.DATASET.TEST_DATASET or 'skelda' in config.DATASET.TEST_DATASET:
         aps, _, mpjpe, recall = loader.dataset.evaluate(preds)
         msg = (
             "ap@25: {aps_25:.4f}\tap@50: {aps_50:.4f}\tap@75: {aps_75:.4f}\t"
