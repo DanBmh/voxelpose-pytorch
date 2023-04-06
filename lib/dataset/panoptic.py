@@ -240,13 +240,11 @@ class Panoptic(JointsDataset):
     def __getitem__(self, idx):
         input, target, weight, target_3d, meta, input_heatmap = [], [], [], [], [], []
 
-        # if self.image_set == 'train':
-        #     # camera_num = np.random.choice([5], size=1)
-        #     select_cam = np.random.choice(self.num_views, size=5, replace=False)
-        # elif self.image_set == 'validation':
-        #     select_cam = list(range(self.num_views))
+        select_cams = list(range(self.num_views))
+        if self.image_set == "train" and self.num_views > 5:
+            select_cams = np.random.choice(self.num_views, size=5, replace=False)
 
-        for k in range(self.num_views):
+        for k in select_cams:
             i, t, w, t3, m, ih = super().__getitem__(self.num_views * idx + k)
             if i is None:
                 continue
