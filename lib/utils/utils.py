@@ -78,14 +78,18 @@ def load_model_state(model, output_dir, epoch):
         return model
 
 
-def load_checkpoint(model, optimizer, output_dir, filename="checkpoint.pth.tar"):
+def load_checkpoint(model, optimizer, output_dir, filename="model_best.pth.tar"):
     file = os.path.join(output_dir, filename)
     if os.path.isfile(file):
         checkpoint = torch.load(file)
-        start_epoch = checkpoint["epoch"]
+        start_epoch = checkpoint["epoch"] if "epoch" in checkpoint else 0
         precision = checkpoint["precision"] if "precision" in checkpoint else 0
-        model.module.load_state_dict(checkpoint["state_dict"])
-        optimizer.load_state_dict(checkpoint["optimizer"])
+        if "state_dict" in checkpoint:
+            model.module.load_state_dict(checkpoint["state_dict"])
+        else:
+            model.module.load_state_dict(torch.load(file))
+        if "optimizer" in checkpoint:
+            optimizer.load_state_dict(checkpoint["optimizer"])
         print("=> load checkpoint {} (epoch {})".format(file, start_epoch))
 
         return start_epoch, model, optimizer, precision

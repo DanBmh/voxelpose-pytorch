@@ -1,9 +1,3 @@
-lib/
-!lib/core
-!lib/dataset
-!lib/models
-!lib/utils
-
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
