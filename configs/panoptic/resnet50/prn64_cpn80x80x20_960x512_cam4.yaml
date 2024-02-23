@@ -24,7 +24,7 @@ DATASET:
   TEST_SUBSET: 'validation'
   TRAIN_SUBSET: 'train'
   ROOTIDX: 2
-  CAMERA_NUM: 5
+  CAMERA_NUM: 4
 NETWORK:
   PRETRAINED_BACKBONE: "models/pose_resnet50_panoptic.pth.tar"
   PRETRAINED:  ''  # 'models/pytorch/imagenet/resnet50-19c8e357.pth'
