@@ -114,7 +114,7 @@ class ShelfSynthetic(Dataset):
         self.cameras = self._get_cam()
 
     def _get_cam(self):
-        cam_file = osp.join(self.dataset_root, "calibration_shelf.json")
+        cam_file = osp.join(self.dataset_root, self.calib_file)
         with open(cam_file) as cfile:
             cameras = json.load(cfile)
 

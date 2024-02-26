@@ -49,7 +49,10 @@ def train_3d(
     ) in enumerate(loader):
         data_time.update(time.time() - end)
 
-        if "panoptic" in config.DATASET.TEST_DATASET:
+        if (
+            "panoptic" in config.DATASET.TRAIN_DATASET
+            or config.DATASET.TRAIN_DATASET == "skelda"
+        ):
             pred, heatmaps, grid_centers, loss_2d, loss_3d, loss_cord = model(
                 views=inputs,
                 meta=meta,
@@ -58,8 +61,9 @@ def train_3d(
                 targets_3d=targets_3d[0],
             )
         elif (
-            "campus" in config.DATASET.TEST_DATASET
-            or "shelf" in config.DATASET.TEST_DATASET
+            "campus" in config.DATASET.TRAIN_DATASET
+            or "shelf" in config.DATASET.TRAIN_DATASET
+            or "synthetic" in config.DATASET.TRAIN_DATASET
         ):
             pred, heatmaps, grid_centers, loss_2d, loss_3d, loss_cord = model(
                 meta=meta, targets_3d=targets_3d[0], input_heatmaps=input_heatmap
@@ -75,18 +79,14 @@ def train_3d(
         loss = loss_2d + loss_3d + loss_cord
         losses.update(loss.item())
 
-        if loss_cord > 0:
-            optimizer.zero_grad()
+        optimizer.zero_grad()
+        if loss_cord > 0 and loss_3d > 0:
+            (loss_2d + loss_3d + loss_cord).backward()
+        elif loss_cord > 0:
             (loss_2d + loss_cord).backward()
-            optimizer.step()
-
-        if accu_loss_3d > 0 and (i + 1) % accumulation_steps == 0:
-            optimizer.zero_grad()
-            accu_loss_3d.backward()
-            optimizer.step()
-            accu_loss_3d = 0.0
-        else:
-            accu_loss_3d += loss_3d / accumulation_steps
+        elif loss_3d > 0:
+            loss_3d.backward()
+        optimizer.step()
 
         batch_time.update(time.time() - end)
         end = time.time()
@@ -156,7 +156,10 @@ def validate_3d(config, model, loader, output_dir):
             input_heatmap,
         ) in enumerate(loader):
             data_time.update(time.time() - end)
-            if "panoptic" in config.DATASET.TEST_DATASET:
+            if (
+                "panoptic" in config.DATASET.TEST_DATASET
+                or config.DATASET.TEST_DATASET == "skelda"
+            ):
                 pred, heatmaps, grid_centers, _, _, _ = model(
                     views=inputs,
                     meta=meta,
@@ -226,6 +229,9 @@ def validate_3d(config, model, loader, output_dir):
             )
         )
         logger.info(msg)
+        metric = np.mean(aps)
+    elif "skelda" in config.DATASET.TEST_DATASET:
+        aps, _, _, _ = loader.dataset.evaluate(preds)
         metric = np.mean(aps)
     elif (
         "campus" in config.DATASET.TEST_DATASET

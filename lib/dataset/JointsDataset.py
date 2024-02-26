@@ -83,6 +83,9 @@ class JointsDataset(Dataset):
             data_numpy = cv2.imread(
                 image_file, cv2.IMREAD_COLOR | cv2.IMREAD_IGNORE_ORIENTATION
             )
+            if data_numpy.shape == (1002, 1000, 3):
+                # Fix the different shapes of human36m images
+                data_numpy = cv2.resize(data_numpy, (1000, 1000))
 
         if data_numpy is None:
             # logger.error('=> fail to read {}'.format(image_file))

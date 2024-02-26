@@ -27,58 +27,15 @@ from utils.transforms import (
 
 logger = logging.getLogger(__name__)
 
-coco_joints_def = {
-    0: "nose",
-    1: "Leye",
-    2: "Reye",
-    3: "Lear",
-    4: "Rear",
-    5: "Lsho",
-    6: "Rsho",
-    7: "Lelb",
-    8: "Relb",
-    9: "Lwri",
-    10: "Rwri",
-    11: "Lhip",
-    12: "Rhip",
-    13: "Lkne",
-    14: "Rkne",
-    15: "Lank",
-    16: "Rank",
-}
 
-LIMBS = [
-    [0, 1],
-    [0, 2],
-    [1, 2],
-    [1, 3],
-    [2, 4],
-    [3, 5],
-    [4, 6],
-    [5, 7],
-    [7, 9],
-    [6, 8],
-    [8, 10],
-    [5, 11],
-    [11, 13],
-    [13, 15],
-    [6, 12],
-    [12, 14],
-    [14, 16],
-    [5, 6],
-    [11, 12],
-]
-
-
-class CampusSynthetic(Dataset):
+class SkeldaSynthetic(Dataset):
     def __init__(self, cfg, image_set, is_train, transform=None):
         super().__init__()
         self.pixel_std = 200.0
-        self.joints_def = coco_joints_def
-        self.limbs = LIMBS
-        # self.num_joints = len(coco_joints_def)
+        self.joints_def = None
+        self.limbs = None
         self.num_joints = 15
-        self.cam_list = [0, 1, 2]
+        self.cam_list = [0, 1, 2, 3, 4]
         self.num_views = len(self.cam_list)
         self.maximum_person = cfg.MULTI_PERSON.MAX_PEOPLE_NUM
 
@@ -98,6 +55,7 @@ class CampusSynthetic(Dataset):
 
         self.target_type = cfg.NETWORK.TARGET_TYPE
         self.image_size = np.array(cfg.NETWORK.IMAGE_SIZE)
+        self.org_size = np.array(cfg.NETWORK.ORI_IMAGE_SIZE)
         self.heatmap_size = np.array(cfg.NETWORK.HEATMAP_SIZE)
         self.sigma = cfg.NETWORK.SIGMA
         self.use_different_joints_weight = cfg.LOSS.USE_DIFFERENT_JOINTS_WEIGHT
@@ -128,7 +86,7 @@ class CampusSynthetic(Dataset):
 
     def __getitem__(self, idx):
         # nposes = np.random.choice([1, 2, 3, 4, 5], p=[0.1, 0.1, 0.2, 0.4, 0.2])
-        nposes = np.random.choice(range(1, 10))
+        nposes = np.random.choice(range(1, 6))
         bbox_list = []
         center_list = []
 
@@ -201,9 +159,7 @@ class CampusSynthetic(Dataset):
             new_xy = rotate_points(points, center, rot_rad) - center + new_center
 
             loop_count = 0
-            while not self.isvalid(
-                new_center, self.calc_bbox(new_xy, joints_3d_vis[n]), bbox_list
-            ):
+            while not self.isvalid(self.calc_bbox(new_xy, joints_3d_vis[n]), bbox_list):
                 loop_count += 1
                 if loop_count >= 100:
                     break
@@ -248,8 +204,8 @@ class CampusSynthetic(Dataset):
         joints_3d_vis = copy.deepcopy(joints_3d_vis)
         nposes = len(joints_3d)
 
-        width = 360
-        height = 288
+        width = self.org_size[0]
+        height = self.org_size[1]
         c = np.array([width / 2.0, height / 2.0], dtype=np.float32)
         # s = np.array(
         #     [width / self.pixel_std, height / self.pixel_std], dtype=np.float32)
@@ -365,9 +321,9 @@ class CampusSynthetic(Dataset):
             feat_stride = self.image_size / self.heatmap_size
 
             for n in range(nposes):
-                # obscured = random.random() < 0.05
-                # if obscured:
-                #     continue
+                obscured = random.random() < 0.05
+                if obscured:
+                    continue
                 human_scale = 2 * self.compute_human_scale(
                     joints[n] / feat_stride, joints_vis[n]
                 )
@@ -395,14 +351,15 @@ class CampusSynthetic(Dataset):
                     x = np.arange(0, size, 1, np.float32)
                     y = x[:, np.newaxis]
                     x0 = y0 = size // 2
+                    # scale = 1 - np.abs(np.random.randn(1) * 0.25)
                     scale = (
                         0.9 + np.random.randn(1) * 0.03
                         if random.random() < 0.6
                         else 1.0
                     )
-                    if joint_id in [7, 8]:
+                    if joint_id in [7, 8, 13, 14]:
                         scale = scale * 0.5 if random.random() < 0.1 else scale
-                    elif joint_id in [9, 10]:
+                    elif joint_id in [9, 10, 15, 16]:
                         scale = scale * 0.2 if random.random() < 0.1 else scale
                     else:
                         scale = scale * 0.5 if random.random() < 0.05 else scale
@@ -498,10 +455,7 @@ class CampusSynthetic(Dataset):
     def get_new_center(center_list):
         if len(center_list) == 0 or random.random() < 0.7:
             new_center = np.array(
-                [
-                    np.random.uniform(-2500.0, 8500.0),
-                    np.random.uniform(-1000.0, 10000.0),
-                ]
+                [np.random.uniform(-1000.0, 2000.0), np.random.uniform(-1600.0, 1600.0)]
             )
         else:
             xy = center_list[np.random.choice(range(len(center_list)))]
@@ -511,18 +465,10 @@ class CampusSynthetic(Dataset):
 
         return new_center
 
-    def isvalid(self, new_center, bbox, bbox_list):
-        new_center_us = new_center.reshape(1, -1)
-        vis = 0
-        for k, cam in self.cameras.items():
-            width = 360
-            height = 288
-            loc_2d = project_pose(np.hstack((new_center_us, [[1000.0]])), cam)
-            if 10 < loc_2d[0, 0] < width - 10 and 10 < loc_2d[0, 1] < height - 10:
-                vis += 1
-
+    @staticmethod
+    def isvalid(bbox, bbox_list):
         if len(bbox_list) == 0:
-            return vis >= 2
+            return True
 
         bbox_list = np.array(bbox_list)
         x0 = np.maximum(bbox[0], bbox_list[:, 0])
@@ -537,7 +483,7 @@ class CampusSynthetic(Dataset):
         )
         iou_list = intersection / (area + area_list - intersection)
 
-        return vis >= 2 and np.max(iou_list) < 0.01
+        return np.max(iou_list) < 0.01
 
     @staticmethod
     def calc_bbox(pose, pose_vis):

@@ -73,6 +73,7 @@ config.NETWORK.NUM_JOINTS = 20
 config.NETWORK.INPUT_SIZE = 512
 config.NETWORK.HEATMAP_SIZE = np.array([80, 80])
 config.NETWORK.IMAGE_SIZE = np.array([320, 320])
+config.NETWORK.ORI_IMAGE_SIZE = np.array([1920, 1080])
 config.NETWORK.SIGMA = 2
 config.NETWORK.TARGET_TYPE = "gaussian"
 config.NETWORK.AGGRE = True
@@ -107,6 +108,7 @@ config.DATASET.COLOR_RGB = False
 config.DATASET.FLIP = True
 config.DATASET.DATA_AUGMENTATION = True
 config.DATASET.CAMERA_NUM = 5
+config.DATASET.CAMERA_FILE = "cameras.pkl"
 
 # training data augmentation
 config.DATASET.SCALE_FACTOR = 0

@@ -96,7 +96,10 @@ def main():
             meta,
             input_heatmap,
         ) in enumerate(tqdm(test_loader)):
-            if "panoptic" in config.DATASET.TEST_DATASET:
+            if (
+                "panoptic" in config.DATASET.TEST_DATASET
+                or "skelda" in config.DATASET.TEST_DATASET
+            ):
                 pred, _, _, _, _, _ = model(views=inputs, meta=meta)
             elif (
                 "campus" in config.DATASET.TEST_DATASET
@@ -117,6 +120,8 @@ def main():
             tb.add_row(["Recall"] + [f"{re * 100:.2f}" for re in recs])
             print(tb)
             print(f"MPJPE: {mpjpe:.2f}mm")
+        elif "skelda" in config.DATASET.TEST_DATASET:
+            test_dataset.evaluate(preds)
         else:
             actor_pcp, avg_pcp, bone_person_pcp, _ = test_dataset.evaluate(preds)
             tb.field_names = (
