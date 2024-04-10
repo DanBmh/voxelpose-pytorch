@@ -71,8 +71,6 @@ joint_names_3d = [
 ]
 
 eval_joints = [
-    "shoulder_middle",
-    "hip_middle",
     "nose",
     "shoulder_left",
     "shoulder_right",
@@ -140,7 +138,7 @@ def load_labels(dataset: dict):
             label["cameras_color"] = label["cameras"]
             label["imgpaths_color"] = label["imgpaths"]
 
-            # Use "nose" detection as "head" joint position
+            # Use "head" label for "nose" detections
             label["joints"][label["joints"].index("head")] = "nose"
 
     elif "ikeaasm" in dataset:
@@ -151,9 +149,17 @@ def load_labels(dataset: dict):
         labels = load_json(dataset["shelf"]["path"])
         labels = [lb for lb in labels if "test" in lb["splits"]]
 
+        # Use "head" label for "nose" detections
+        for label in labels:
+            label["joints"][label["joints"].index("head")] = "nose"
+
     elif "campus" in dataset:
         labels = load_json(dataset["campus"]["path"])
         labels = [lb for lb in labels if "test" in lb["splits"]]
+
+        # Use "head" label for "nose" detections
+        for label in labels:
+            label["joints"][label["joints"].index("head")] = "nose"
 
     elif "tsinghua" in dataset:
         labels = load_json(dataset["tsinghua"]["path"])
@@ -173,7 +179,7 @@ def load_labels(dataset: dict):
             labels = [l for i, l in enumerate(labels) if i % take_interval == 0]
 
     # Filter joints
-    fj_func = lambda x: utils_pose.filter_joints_3d(x, eval_joints)
+    fj_func = lambda x: utils_pose.filter_joints_3d(x, joint_names_3d)
     labels = list(map(fj_func, labels))
 
     return labels
@@ -383,6 +389,7 @@ class Skelda(JointsDataset):
             all_ids,
             joint_names_net=joint_names_3d,
             joint_names_use=eval_joints,
+            replace_head_with_nose=True,
         )
 
         if "mpjpe" in res:
