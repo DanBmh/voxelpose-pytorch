@@ -12,8 +12,8 @@ logger = logging.getLogger(__name__)
 
 # ==================================================================================================
 
-dataset_use = "panoptic"
-# dataset_use = "human36m"
+dataset_use = "human36m"
+# dataset_use = "panoptic"
 # dataset_use = "mvor"
 # dataset_use = "shelf"
 # dataset_use = "campus"
@@ -124,7 +124,8 @@ def load_labels(dataset: dict):
 
     elif "human36m" in dataset:
         labels = load_json(dataset["human36m"]["path"])
-        labels = [lb for i, lb in enumerate(labels) if i % 9000 < 150]
+        labels = [lb for lb in labels if lb["subject"] == "S9"]
+        labels = [lb for i, lb in enumerate(labels) if i % 4000 < 150]
 
         for label in labels:
             label.pop("action")
