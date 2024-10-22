@@ -384,7 +384,6 @@ class Skelda(JointsDataset):
             joint_names_net=joint_names_3d,
             joint_names_use=eval_joints,
             save_error_imgs="",
-            pred_imgpaths=[],
         )
         _ = evals.pcp.run_eval(
             self.labels,

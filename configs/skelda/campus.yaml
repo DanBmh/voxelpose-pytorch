@@ -67,6 +67,7 @@ TRAIN:
   LR: 0.0001
 TEST:
   MODEL_FILE: "model_best.pth.tar"
+  # MODEL_FILE: '/voxelpose-pytorch/output/panoptic/multi_person_posenet_50/prn64_cpn80x80x20_960x512_cam5/model_best.pth.tar'
   BATCH_SIZE: 1
 DEBUG:
   DEBUG: true

@@ -15,7 +15,7 @@ DATASET:
   COLOR_RGB: True
   TRAIN_DATASET: 'skelda_synthetic'
   TEST_DATASET: 'skelda'
-  CAMERA_FILE: '/VoxelPoseWrapper/data/calibration_tsinghua.json'
+  CAMERA_FILE: '/VoxelPoseWrapper/data/calibration_ikeaasm.json'
   DATA_FORMAT: jpg
   DATA_AUGMENTATION: False
   FLIP: False
@@ -25,20 +25,20 @@ DATASET:
   TEST_SUBSET: 'validation'
   TRAIN_SUBSET: 'train'
   ROOTIDX: 2
-  CAMERA_NUM: 6
+  CAMERA_NUM: 3
 NETWORK:
   PRETRAINED_BACKBONE: "models/pose_resnet50_panoptic.pth.tar"
   PRETRAINED:  ''  # 'models/pytorch/imagenet/resnet50-19c8e357.pth'
   TARGET_TYPE: gaussian
   ORI_IMAGE_SIZE: 
-  - 2048
-  - 2048
+  - 1920
+  - 1080
   IMAGE_SIZE:
-  - 1024
-  - 1024
+  - 960
+  - 512
   HEATMAP_SIZE:
-  - 256
-  - 256
+  - 240
+  - 128
   SIGMA: 3
   NUM_JOINTS: 15
   USE_GT: False
@@ -66,8 +66,7 @@ TRAIN:
   OPTIMIZER: adam
   LR: 0.0001
 TEST:
-  MODEL_FILE: "model_best.pth.tar"
-  # MODEL_FILE: '/voxelpose-pytorch/output/panoptic/multi_person_posenet_50/prn64_cpn80x80x20_960x512_cam5/model_best.pth.tar'
+  MODEL_FILE: '/voxelpose-pytorch/output/panoptic/multi_person_posenet_50/prn64_cpn80x80x20_960x512_cam5/model_best.pth.tar'
   BATCH_SIZE: 1
 DEBUG:
   DEBUG: true
@@ -77,15 +76,15 @@ MULTI_PERSON:
   SPACE_SIZE:
     - 8000.0
     - 8000.0
-    - 2400.0
+    - 2600.0
   SPACE_CENTER:
     - 0.0
+    - 2000.0
     - 0.0
-    - 1200.0
   INITIAL_CUBE_SIZE:
     - 80
     - 80
-    - 24
+    - 20
   MAX_PEOPLE_NUM: 10
   THRESHOLD: 0.1
 PICT_STRUCT:
