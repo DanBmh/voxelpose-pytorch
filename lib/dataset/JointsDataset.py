@@ -87,6 +87,16 @@ class JointsDataset(Dataset):
                 # Fix the different shapes of human36m images
                 data_numpy = cv2.resize(data_numpy, (1000, 1000))
 
+            if db_rec["camera"].get("type", "") == "fisheye":
+                cam = db_rec["camera"]
+                K = np.array(cam["Kold"], dtype=np.float32).reshape((3, 3))
+                DC = np.array(cam["DCold"], dtype=np.float32).reshape((4, 1))
+                size = (cam["width"], cam["height"])
+                Knew = np.array(cam["Knew"], dtype=np.float32).reshape((3, 3))
+                data_numpy = cv2.fisheye.undistortImage(
+                    data_numpy, K, DC, Knew=Knew, new_size=size
+                )
+
         if data_numpy is None:
             # logger.error('=> fail to read {}'.format(image_file))
             # raise ValueError('Fail to read {}'.format(image_file))
