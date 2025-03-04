@@ -5,6 +5,7 @@
 
 from __future__ import absolute_import, division, print_function
 
+import time
 import torch
 import torch.nn as nn
 from core.loss import PerJointL1Loss, PerJointMSELoss
@@ -22,6 +23,7 @@ class MultiPersonPoseNet(nn.Module):
         self.backbone = backbone
         self.root_net = CuboidProposalNet(cfg)
         self.pose_net = PoseRegressionNet(cfg)
+        self.time_3d = 0
 
         self.USE_GT = cfg.NETWORK.USE_GT
         self.root_id = cfg.DATASET.ROOTIDX
@@ -58,6 +60,7 @@ class MultiPersonPoseNet(nn.Module):
                 loss_2d += criterion(o, t, True, w)
             loss_2d /= len(all_heatmaps)
 
+        stime = time.time()
         loss_3d = criterion(
             torch.zeros(1, device=device), torch.zeros(1, device=device)
         )
@@ -118,6 +121,7 @@ class MultiPersonPoseNet(nn.Module):
                             ) / count
                 del single_pose
 
+        self.time_3d += time.time() - stime
         return pred, all_heatmaps, grid_centers, loss_2d, loss_3d, loss_cord
 
 

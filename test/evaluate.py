@@ -110,6 +110,7 @@ def main():
             pred = pred.detach().cpu().numpy()
             for b in range(pred.shape[0]):
                 preds.append(pred[b])
+        print("Time 3D:", model.module.time_3d)
 
         tb = PrettyTable()
         if "panoptic" in config.DATASET.TEST_DATASET:
