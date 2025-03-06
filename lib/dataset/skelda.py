@@ -312,7 +312,7 @@ class Skelda(JointsDataset):
                     cam["DC"] = [0.0, 0.0, 0.0, 0.0, 0.0]
 
                 our_cam = {}
-                our_cam["R"] = np.array(cam["R"])
+                our_cam["R"] = np.array(cam["R"]).T
                 our_cam["T"] = np.array(cam["T"]) * 1000
                 our_cam["fx"] = np.array(cam["K"])[0, 0]
                 our_cam["fy"] = np.array(cam["K"])[1, 1]
